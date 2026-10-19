@@ -22,6 +22,7 @@ class Entry(Base):
     notes = Column(String, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=True)
     finished_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    tmdb_id = Column(Integer, nullable=True)
   
 
 

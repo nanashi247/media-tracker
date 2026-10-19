@@ -57,6 +57,7 @@ class EntryBase(BaseModel):
     notes: Optional[str] = None
 
 class EntryCreate(EntryBase):
+    tmdb_id: Optional[int] = None
     pass
 
 class EntryUpdate(BaseModel):
@@ -73,6 +74,14 @@ class EntryOut(EntryBase):
     created_at: Optional[datetime] = None
     class Config():
         from_attributes = True
+
+class EntryCreateTMDB(BaseModel):
+    tmdb_id: int
+    title: str
+    kind: EntryKind
+    status: EntryStatus = EntryStatus.watchlist
+    rating: Optional[float] = None
+    notes: Optional[str] = None
 
 
 
