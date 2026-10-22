@@ -12,7 +12,7 @@ class User(Base):
     created_at = Column (TIMESTAMP(timezone = True), nullable=False, server_default=text('now()'))
 
 class Entry(Base):
-    __tablename__ = "media"
+    __tablename__ = "entries"
     id = Column(Integer, primary_key=True, nullable= False)
     title = Column(String, primary_key= False, nullable=False)
     kind = Column(String, primary_key=False, nullable=False)
@@ -23,6 +23,20 @@ class Entry(Base):
     created_at = Column(TIMESTAMP(timezone=True), nullable=True)
     finished_at = Column(TIMESTAMP(timezone=True), nullable=True)
     tmdb_id = Column(Integer, nullable=True)
+    tags = relationship("Tag", secondary= "entry_tags")
+
+
+class Tag(Base):
+    __tablename__ = "tags"
+    id = Column(Integer, primary_key=True, nullable= False)
+    name = Column(String, unique = True, nullable=False)
+
+
+class EntryTag(Base):
+    __tablename__ = "entry_tags"
+    entry_id = Column(Integer, ForeignKey("entries.id", ondelete = "CASCADE"), primary_key= True, nullable= False)
+    tag_id = Column(Integer, ForeignKey("tags.id", ondelete= "CASCADE"), primary_key= True)
+
   
 
 

@@ -5,7 +5,6 @@ from sqlalchemy import DATETIME
 from enum import Enum
 
 
-# USER SCHEMAS
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -20,11 +19,6 @@ class UserOut(BaseModel):
         from_attributes: True
 
 
-
-
-
-# TOKEN SCHEMAS
-
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -32,11 +26,6 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     id: int
 
-
-
-
-
-# ENTRY SCHEMAS
 
 class EntryKind(str, Enum):
     movie = "movie"
@@ -66,12 +55,6 @@ class EntryUpdate(BaseModel):
     status: Optional[EntryStatus] = None
     rating: Optional[float] = None
     notes: Optional[str] = None
-
-
-class EntryOut(EntryBase):
-    id: int
-    user_id: int
-    created_at: Optional[datetime] = None
     class Config():
         from_attributes = True
 
@@ -83,5 +66,14 @@ class EntryCreateTMDB(BaseModel):
     rating: Optional[float] = None
     notes: Optional[str] = None
 
+class TagOut(BaseModel):
+    id: int
+    name: str
+    class Config():
+        from_attributes = True
 
-
+class EntryOut(EntryBase):
+    id: int
+    user_id: int
+    created_at: Optional[datetime] = None
+    tags: list[TagOut] = []

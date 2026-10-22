@@ -22,7 +22,7 @@ def create_entry_from_tmdb(entry: schemas.EntryCreateTMDB, db: Session = Depends
     title = tmdb.get_media_details(entry.tmdb_id, entry.kind)
 
     new_entry = models.Entry(
-        entry_id = entry.tmdb_id,
+        tmdb_id = entry.tmdb_id,
         user_id=current_user.user_id,
         title=title,
         kind=entry.kind, 
@@ -59,8 +59,12 @@ def get_entries(
     limit: Optional[int] = 10,
     skip: Optional[int] = 0,
     sort_by: Optional[str] = "created_at"):
+    tag: Optional[str] = None
 
     query = db.query(models.Entry).filter(models.Entry.user_id == current_user.user_id)
+
+    if tag:
+        query = query.join(models.EntryTag).join(models.Tag).filter(models.Tag.name == tag)
 
     if status_filter:
         query = query.filter(models.Entry.status == status_filter)
@@ -73,6 +77,45 @@ def get_entries(
 
     entries = query.order_by(sort_column.desc()).offset(skip).limit(limit).all()
     return entries
+
+
+@router.post("/{id}/tags/{tag_id}", response_model= schemas.EntryOut)
+
+def add_tags_to_entries(id: int, tag_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+
+    entry = db.query(models.Entry).filter(id == models.Entry.id, models.Entry.user_id == current_user.user_id).first()
+
+    if not entry:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f'entry with id = {id} was not found.')
+
+    tag = db.query(models.Tag).filter(models.Tag.id == tag_id).first()
+
+    if not tag:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f'tag with id = {tag_id} was not found.')
+
+    if tag not in entry.tags:
+        entry.tags.append(tag)
+        db.commit()
+        db.refresh(entry)
+
+    return entry
+
+@router.delete("/{id}/tags/{tag_id}", response_model= schemas.EntryOut)
+def remove_tag_from_entries(tag_id: int,id: int, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+    entry = db.query(models.Entry).filter(models.Entry.id == id, models.Entry.user_id == current_user.user_id).first()
+
+    if not entry:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f'entry with id = {id} wasnt found.')
+
+    tag = db.query(models.Tag).filter(models.Tag.id == tag_id).first()
+
+    if tag and tag in entry.tags:
+        entry.tags.remove(tag)
+        db.commit()
+        db.refresh(entry)
+
+    return entry
+
 
 
 @router.get("/{id}", response_model=schemas.EntryOut)
@@ -112,7 +155,9 @@ def delete_entry(id:int, db: Session = Depends(get_db), current_user: int = Depe
     if not entry: 
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail=f'Entry with id: {id} was not found')
 
-    return entry_query.delete(synchronize_session= False)
+    entry_query.delete(synchronize_session= False)
+    db.commit()
+    return (f'Entry with id: {id} was successfully deleted.')
 
 
 
