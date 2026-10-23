@@ -44,6 +44,9 @@ class EntryBase(BaseModel):
     status: EntryStatus
     rating: Optional[float] = None
     notes: Optional[str] = None
+    episode: Optional[int] = None
+    season: Optional[int] = None
+
 
 class EntryCreate(EntryBase):
     tmdb_id: Optional[int] = None

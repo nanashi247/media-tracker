@@ -24,6 +24,8 @@ class Entry(Base):
     finished_at = Column(TIMESTAMP(timezone=True), nullable=True)
     tmdb_id = Column(Integer, nullable=True)
     tags = relationship("Tag", secondary= "entry_tags")
+    season = Column(Integer, nullable= True)
+    episode = Column(Integer, nullable= True)
 
 
 class Tag(Base):

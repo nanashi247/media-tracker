@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from .. import tmdb
 from ..database import get_db
 from .. import schemas, models, oauth2
+from sqlalchemy import func
 
 router = APIRouter(
     prefix="/entries",
@@ -116,7 +117,24 @@ def remove_tag_from_entries(tag_id: int,id: int, db: Session = Depends(get_db), 
 
     return entry
 
+@router.get("/stats/summary")
+def get_stats(db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
 
+    status_counts = (
+        db.query(models.Entry.status, func.count(models.Entry.id))
+        .filter(models.Entry.user_id == current_user.user_id)
+        .group_by(models.Entry.status).all()  
+    )
+    avg_rating_by_kind = (
+        db.query(models.Entry.kind, func.avg(models.Entry.rating))
+        .filter(models.Entry.user_id == current_user.user_id, models.Entry.rating.isnot(None))
+        .group_by(models.Entry.kind).all()
+    )
+
+    return {
+        "by_status": {status : count for status, count in status_counts},
+        "avg_rating_by_kind": {kind: round(avg, 2) for kind, avg in avg_rating_by_kind}
+    }
 
 @router.get("/{id}", response_model=schemas.EntryOut)
 def get_entry(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
